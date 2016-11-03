@@ -21,15 +21,11 @@ public class MainHook implements IXposedHookLoadPackage {
         final Object activityThread = XposedHelpers.callStaticMethod(XposedHelpers.findClass("android.app.ActivityThread", null), "currentActivityThread");
         final Context systemContext = (Context) XposedHelpers.callMethod(activityThread, "getSystemContext");
         Uri uri = Uri.parse("content://name.caiyao.fakegps.data.AppInfoProvider/app");
-        Cursor cursor = systemContext.getContentResolver().query(uri, new String[]{"latitude", "longitude","lac","cid"}, "package_name=?", new String[]{loadPackageParam.packageName}, null);
+        Cursor cursor = systemContext.getContentResolver().query(uri, new String[]{"level"}, "package_name=?", new String[]{loadPackageParam.packageName}, null);
         if (cursor != null && cursor.moveToNext()) {
-            //41019, 18511
-            double latitude = cursor.getDouble(cursor.getColumnIndex("latitude")) + (double) new Random().nextInt(100) / 1000000 + ((double) new Random().nextInt(99999999)) / 100000000000000d;
-            double longitude = cursor.getDouble(cursor.getColumnIndex("longitude")) + (double) new Random().nextInt(100) / 1000000 + ((double) new Random().nextInt(99999999)) / 100000000000000d;
-            int lac = cursor.getInt(cursor.getColumnIndex("lac"));
-            int cid = cursor.getInt(cursor.getColumnIndex("cid"));
-            XposedBridge.log("模拟位置:" + loadPackageParam.packageName + "," + latitude + "," + longitude + "," + lac + "," + cid);
-            HookUtils.HookAndChange(loadPackageParam.classLoader, latitude, longitude, lac, cid);
+            int level = cursor.getInt(cursor.getColumnIndex("level"));
+            XposedBridge.log("保护位置:" + loadPackageParam.packageName + "," + level);
+            HookUtils.HookAndChange(loadPackageParam.classLoader,level);
             cursor.close();
         }
     }

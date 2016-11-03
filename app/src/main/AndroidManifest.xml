@@ -28,16 +28,6 @@
             </intent-filter>
         </activity>
 
-        <meta-data
-            android:name="com.amap.api.v2.apikey"
-            android:value="e34a748230a8123b72fd71a6f1604946"/>
-
-        <activity
-            android:name=".ui.AMapActivity"
-            android:theme="@style/AppTheme.NoActionBar"
-            >
-        </activity>
-
         <provider
             android:authorities="name.caiyao.fakegps.data.AppInfoProvider"
             android:exported="true"

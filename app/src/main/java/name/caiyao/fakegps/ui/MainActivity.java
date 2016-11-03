@@ -1,11 +1,15 @@
 package name.caiyao.fakegps.ui;
 
 import android.app.ProgressDialog;
+import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -23,11 +27,13 @@ import java.util.List;
 import name.caiyao.fakegps.BuildConfig;
 import name.caiyao.fakegps.R;
 import name.caiyao.fakegps.data.AppInfo;
+import name.caiyao.fakegps.data.DbHelper;
 
 public class MainActivity extends AppCompatActivity {
 
     private ProgressDialog mProgressDialog;
     private AppAdapter mAppAdapter;
+    private SQLiteDatabase mSQLiteDatabase;
     private ArrayList<AppInfo> mAppInfos = new ArrayList<>();
 
     @Override
@@ -50,19 +56,20 @@ public class MainActivity extends AppCompatActivity {
         mProgressDialog.setMessage("正在扫描应用程序");
         mProgressDialog.show();
 
+        mSQLiteDatabase = new DbHelper(this).getWritableDatabase();
         GetAppInfoTask getAppInfoTask = new GetAppInfoTask();
         getAppInfoTask.execute();
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main,menu);
+        getMenuInflater().inflate(R.menu.menu_main, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()){
+        switch (item.getItemId()) {
             case R.id.setting:
 
                 break;
@@ -131,7 +138,17 @@ public class MainActivity extends AppCompatActivity {
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    startActivity(new Intent(MainActivity.this, AMapActivity.class).putExtra("package_name", mAppInfos.get(holder.getAdapterPosition()).getPackageName()));
+                    new AlertDialog.Builder(MainActivity.this).setTitle("设置保护级别")
+                            .setSingleChoiceItems(new String[]{"1", "2", "3", "4"}, 0, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    ContentValues contentValues = new ContentValues();
+                                    contentValues.put("package_name", mAppInfos.get(holder.getAdapterPosition()).getPackageName());
+                                    contentValues.put("level", i + 1);
+                                    mSQLiteDatabase.insertWithOnConflict(DbHelper.APP_TABLE_NAME, null, contentValues, SQLiteDatabase.CONFLICT_REPLACE);
+                                    dialogInterface.dismiss();
+                                }
+                            }).show();
                 }
             });
         }
