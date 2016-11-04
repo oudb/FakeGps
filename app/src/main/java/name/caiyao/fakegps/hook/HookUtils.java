@@ -16,6 +16,7 @@ import android.telephony.CellLocation;
 import android.telephony.TelephonyManager;
 import android.telephony.gsm.GsmCellLocation;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -294,37 +295,6 @@ class HookUtils {
                     }
                 });
 
-        XposedHelpers.findAndHookMethod(LocationManager.class, "getLastLocation", new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                Location l = (Location) param.args[0];
-                l.setLatitude(Double.parseDouble(String.valueOf(l.getLatitude()).split(".")[1]));
-                l.setLongitude(Double.parseDouble(String.valueOf(l.getLongitude()).split(".")[1]));
-//                l.setAccuracy(100f);
-//                l.setTime(System.currentTimeMillis());
-//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-//                    l.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
-//                }
-                param.setResult(l);
-            }
-        });
-
-        XposedHelpers.findAndHookMethod(LocationManager.class, "getLastKnownLocation", String.class, new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                Location l = (Location) param.getResult();
-                l.setLatitude(Double.parseDouble(String.valueOf(l.getLatitude()).split(".")[1]));
-                l.setLongitude(Double.parseDouble(String.valueOf(l.getLongitude()).split(".")[1]));
-//                l.setAccuracy(100f);
-//                l.setTime(System.currentTimeMillis());
-//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-//                    l.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
-//                }
-                param.setResult(l);
-            }
-        });
-
-
         XposedHelpers.findAndHookMethod(LocationManager.class, "addNmeaListener", GpsStatus.NmeaListener.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
@@ -336,9 +306,13 @@ class HookUtils {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 double latitude = (double) param.getResult();
-                XposedBridge.log("latitude:" + latitude);
+                int fInt = (int) latitude;
+                BigDecimal b1 = new BigDecimal(Double.toString(latitude));
+                BigDecimal b2 = new BigDecimal(Integer.toString(fInt));
+                double fPoint = b1.subtract(b2).doubleValue();
+                XposedBridge.log("latitude:" + latitude+", doublevalue:"+fPoint);
                 if (latitude > 0.0)
-                    param.setResult(Double.parseDouble("0." + String.valueOf(latitude).split(".")[1]));
+                    param.setResult(fPoint);
             }
         });
 
@@ -347,8 +321,13 @@ class HookUtils {
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 double longitude = (double) param.getResult();
                 XposedBridge.log("longitude:" + longitude);
+                int fInt = (int) longitude;
+                BigDecimal b1 = new BigDecimal(Double.toString(longitude));
+                BigDecimal b2 = new BigDecimal(Integer.toString(fInt));
+                double fPoint = b1.subtract(b2).doubleValue();
+                XposedBridge.log("longitude:" + longitude+", doublevalue:"+fPoint);
                 if (longitude > 0.0)
-                    param.setResult(Double.parseDouble("0." + String.valueOf(longitude).split(".")[1]));
+                    param.setResult(fPoint);
             }
         });
     }
