@@ -1,8 +1,6 @@
 package name.caiyao.fakegps.hook;
 
-import android.location.GpsStatus;
 import android.location.Location;
-import android.location.LocationManager;
 import android.os.Build;
 import android.telephony.CellIdentityCdma;
 import android.telephony.CellIdentityGsm;
@@ -17,6 +15,7 @@ import android.telephony.TelephonyManager;
 import android.telephony.gsm.GsmCellLocation;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,6 +28,8 @@ import de.robv.android.xposed.XposedHelpers;
  */
 class HookUtils {
 
+    public static DecimalFormat df = new DecimalFormat("#.00");
+
     static void HookAndChange(ClassLoader classLoader, final int level) {
         switch (level) {
             case 1:
@@ -37,10 +38,10 @@ class HookUtils {
                 onlyTrack(classLoader);
                 break;
             case 3:
-
+                onlyCity(classLoader);
                 break;
             case 4:
-
+                offLocation(classLoader);
                 break;
         }
     }
@@ -69,6 +70,83 @@ class HookUtils {
     }
 
     private static void onlyTrack(ClassLoader classLoader) {
+        offCell(classLoader);
+        XposedHelpers.findAndHookMethod(Location.class, "getLatitude", new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                double latitude = (double) param.getResult();
+                int fInt = (int) latitude;
+                BigDecimal b1 = new BigDecimal(Double.toString(latitude));
+                BigDecimal b2 = new BigDecimal(Integer.toString(fInt));
+                double fPoint = 40 + b1.subtract(b2).doubleValue();
+                XposedBridge.log("latitude:" + latitude + ", doublevalue:" + fPoint);
+                if (latitude > 0.0)
+                    param.setResult(fPoint);
+            }
+        });
+
+        XposedHelpers.findAndHookMethod(Location.class, "getLongitude", new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                double longitude = (double) param.getResult();
+                XposedBridge.log("longitude:" + longitude);
+                int fInt = (int) longitude;
+                BigDecimal b1 = new BigDecimal(Double.toString(longitude));
+                BigDecimal b2 = new BigDecimal(Integer.toString(fInt));
+                double fPoint = 116 + b1.subtract(b2).doubleValue();
+                XposedBridge.log("longitude:" + longitude + ", doublevalue:" + fPoint);
+                if (longitude > 0.0)
+                    param.setResult(fPoint);
+            }
+        });
+    }
+
+    private static void onlyCity(ClassLoader classLoader) {
+        offCell(classLoader);
+        XposedHelpers.findAndHookMethod(Location.class, "getLatitude", new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                double latitude = (double) param.getResult();
+                //double fPoint = Math.floor(latitude);
+                double fPoint = Double.parseDouble(df.format(latitude));
+                XposedBridge.log("latitude:" + latitude + ", intValue:" + fPoint);
+                if (latitude > 0.0)
+                    param.setResult(fPoint);
+            }
+        });
+
+        XposedHelpers.findAndHookMethod(Location.class, "getLongitude", new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                double longitude = (double) param.getResult();
+                XposedBridge.log("longitude:" + longitude);
+                //double fPoint = Math.floor(longitude);
+                double fPoint = Double.parseDouble(df.format(longitude));
+                XposedBridge.log("longitude:" + longitude + ", intValue:" + fPoint);
+                if (longitude > 0.0)
+                    param.setResult(fPoint);
+            }
+        });
+    }
+
+    private static void offLocation(ClassLoader classLoader) {
+        offCell(classLoader);
+        XposedHelpers.findAndHookMethod(Location.class, "getLatitude", new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                param.setResult(0.0);
+            }
+        });
+
+        XposedHelpers.findAndHookMethod(Location.class, "getLongitude", new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                param.setResult(0.0);
+            }
+        });
+    }
+
+    private static void offCell(ClassLoader classLoader) {
         XposedHelpers.findAndHookMethod("android.telephony.TelephonyManager", classLoader,
                 "getNetworkOperatorName", new XC_MethodHook() {
                     @Override
@@ -294,41 +372,5 @@ class HookUtils {
                         param.setResult(true);
                     }
                 });
-
-        XposedHelpers.findAndHookMethod(LocationManager.class, "addNmeaListener", GpsStatus.NmeaListener.class, new XC_MethodHook() {
-            @Override
-            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                param.setResult(false);
-            }
-        });
-
-        XposedHelpers.findAndHookMethod(Location.class, "getLatitude", new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                double latitude = (double) param.getResult();
-                int fInt = (int) latitude;
-                BigDecimal b1 = new BigDecimal(Double.toString(latitude));
-                BigDecimal b2 = new BigDecimal(Integer.toString(fInt));
-                double fPoint = b1.subtract(b2).doubleValue();
-                XposedBridge.log("latitude:" + latitude+", doublevalue:"+fPoint);
-                if (latitude > 0.0)
-                    param.setResult(fPoint);
-            }
-        });
-
-        XposedHelpers.findAndHookMethod(Location.class, "getLongitude", new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                double longitude = (double) param.getResult();
-                XposedBridge.log("longitude:" + longitude);
-                int fInt = (int) longitude;
-                BigDecimal b1 = new BigDecimal(Double.toString(longitude));
-                BigDecimal b2 = new BigDecimal(Integer.toString(fInt));
-                double fPoint = b1.subtract(b2).doubleValue();
-                XposedBridge.log("longitude:" + longitude+", doublevalue:"+fPoint);
-                if (longitude > 0.0)
-                    param.setResult(fPoint);
-            }
-        });
     }
 }

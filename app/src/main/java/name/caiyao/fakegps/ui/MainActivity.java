@@ -139,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     new AlertDialog.Builder(MainActivity.this).setTitle("设置保护级别")
-                            .setSingleChoiceItems(new String[]{"1", "2", "3", "4"}, 0, new DialogInterface.OnClickListener() {
+                            .setSingleChoiceItems(new String[]{"精确定位", "只保留轨迹", "只保留城市", "拒绝定位"}, 0, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
                                     ContentValues contentValues = new ContentValues();
