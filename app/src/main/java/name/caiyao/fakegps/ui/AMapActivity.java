@@ -40,6 +40,7 @@ public class AMapActivity extends AppCompatActivity implements AMap.OnMapClickLi
     private String pacakgeName;
     private int lac = 0, cid = 0;
     private SQLiteDatabase mSQLiteDatabase;
+    private float accuracy=100f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,15 +56,19 @@ public class AMapActivity extends AppCompatActivity implements AMap.OnMapClickLi
         mv.onCreate(savedInstanceState);
         aMap = mv.getMap();
         mSQLiteDatabase = new DbHelper(this).getWritableDatabase();
-        Cursor cursor = mSQLiteDatabase.query(DbHelper.APP_TABLE_NAME, new String[]{"latitude,longitude"}, "package_name=?", new String[]{pacakgeName}, null, null, null);
+        Cursor cursor = mSQLiteDatabase.query(DbHelper.APP_TABLE_NAME, new String[]{"latitude,longitude,accuracy"}, "package_name=?", new String[]{pacakgeName}, null, null, null);
         if (cursor != null && cursor.moveToNext()) {
             double lat = cursor.getDouble(cursor.getColumnIndex("latitude"));
             double lon = cursor.getDouble(cursor.getColumnIndex("longitude"));
+            float accuracy = cursor.getFloat(cursor.getColumnIndex("accuracy"));
+            if(accuracy < 0f)
+                accuracy = 0f;
+
             LatLng latLng1 = new LatLng(lat, lon);
             MarkerOptions markerOptions = new MarkerOptions();
             markerOptions.position(latLng1);
             markerOptions.draggable(true);
-            markerOptions.title("经度：" + latLng1.longitude + ",纬度：" + latLng1.latitude);
+            markerOptions.title("经度：" + latLng1.longitude + ",纬度：" + latLng1.latitude + ",精度：" + accuracy);
             aMap.addMarker(markerOptions);
             aMap.moveCamera(CameraUpdateFactory.changeLatLng(latLng1));
             aMap.moveCamera(CameraUpdateFactory.zoomTo(aMap.getMaxZoomLevel()));
@@ -107,6 +112,7 @@ public class AMapActivity extends AppCompatActivity implements AMap.OnMapClickLi
                 contentValues.put("longitude", latLng.longitude);
                 contentValues.put("lac", lac);
                 contentValues.put("cid", cid);
+                contentValues.put("accuracy", accuracy);
                 mSQLiteDatabase.insertWithOnConflict(DbHelper.APP_TABLE_NAME, null, contentValues, SQLiteDatabase.CONFLICT_REPLACE);
                 break;
             case R.id.search:
@@ -117,7 +123,7 @@ public class AMapActivity extends AppCompatActivity implements AMap.OnMapClickLi
                         .setPositiveButton("搜索", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                search(et_key.getText().toString());
+                                search(et_key.getText().toString(), et_key);
                             }
                         }).setNegativeButton("取消", new DialogInterface.OnClickListener() {
                     @Override
@@ -187,7 +193,41 @@ public class AMapActivity extends AppCompatActivity implements AMap.OnMapClickLi
         mv.onPause();
     }
 
-    private void search(final String key) {
+    private void search(final String key, EditText searchText) {
+        if(key.startsWith("@"))
+        {
+            String[] custom = key.substring(1).split(",");
+            try {
+                double longitude = Double.parseDouble(custom[0]);
+                double latitude = Double.parseDouble(custom[1]);
+                if(custom.length == 3){
+                    accuracy = Float.parseFloat(custom[2]);
+                    if(accuracy < 0f)
+                    {
+                        accuracy = 0f;
+                    }
+                }
+
+                final LatLng latLng2 = new LatLng(latitude, longitude);
+                String[] keyList = {"自定义经纬度:" + key};
+                new AlertDialog.Builder(AMapActivity.this)
+                        .setTitle("选择位置")
+                        .setSingleChoiceItems(keyList, 0, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                aMap.moveCamera(CameraUpdateFactory.changeLatLng(latLng2));
+                                aMap.moveCamera(CameraUpdateFactory.zoomTo(aMap.getMaxZoomLevel()));
+                                dialog.dismiss();
+                            }
+                        }).show();
+                return;
+            }
+            catch (Exception e)
+            {
+                searchText.setError("不规范的经纬:" + key);
+            }
+        }
+
         PoiSearch.Query query = new PoiSearch.Query(key, null, null);
         query.setPageSize(10);
         query.setPageNum(0);
