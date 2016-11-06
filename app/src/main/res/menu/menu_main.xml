@@ -6,12 +6,4 @@
         android:title="设置"
         app:showAsAction="never"/>
 
-    <item
-        android:id="@+id/donate"
-        android:title="@string/donate"
-        app:showAsAction="never"/>
-    <item
-        android:id="@+id/about"
-        android:title="@string/about"
-        app:showAsAction="never"/>
 </menu>

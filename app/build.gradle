@@ -1,11 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
+    signingConfigs {
+    }
     compileSdkVersion 24
     buildToolsVersion '24.0.2'
-
     defaultConfig {
-        applicationId "name.caiyao.fakegps"
+        applicationId "me.odb.fakegps"
         minSdkVersion 9
         targetSdkVersion 22
         versionCode 6
@@ -22,8 +23,9 @@ android {
 
 dependencies {
     provided 'de.robv.android.xposed:api:81'
-    compile files('libs/AMap_2DMap_V2.8.1_20160202.jar')
+    compile files('libs/Amap_2DMap_V2.9.2_20161026.jar')
     compile 'com.android.support:appcompat-v7:24.2.1'
+    compile 'com.android.support:cardview-v7:24.2.1'
     compile 'com.android.support:design:24.2.1'
-    compile files('libs/AMap_Search_V3.2.1_20160308.jar')
+    compile files('libs/AMap_Search_V3.5.0_20160927.jar')
 }

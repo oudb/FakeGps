@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="name.caiyao.fakegps">
+          package="me.odb.fakegps">
 
     <application
         android:icon="@drawable/gps"
@@ -30,7 +30,7 @@
 
         <meta-data
             android:name="com.amap.api.v2.apikey"
-            android:value="e34a748230a8123b72fd71a6f1604946"/>
+            android:value="a7a77a4cb494032e457f2bd444c4bcb2"/>
 
         <activity
             android:name=".ui.AMapActivity"
@@ -39,7 +39,7 @@
         </activity>
 
         <provider
-            android:authorities="name.caiyao.fakegps.data.AppInfoProvider"
+            android:authorities="me.odb.fakegps.data.AppInfoProvider"
             android:exported="true"
             android:name=".data.AppInfoProvider"/>
     </application>
